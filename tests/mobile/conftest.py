@@ -1,10 +1,13 @@
 import allure
 import pytest
+import allure_commons
 from appium.options.android import UiAutomator2Options
 from appium.options.ios import XCUITestOptions
 from dotenv import load_dotenv
-from selene import browser
+from selene import browser, support
 import os
+import requests
+
 
 
 @pytest.fixture(autouse=True)
@@ -46,10 +49,9 @@ def get_capabilities(platform):
 
 
 def attach_bstack_video(session_id):
-    import requests
     bstack_session = requests.get(
     f'https://api.browserstack.com/app-automate/sessions/{session_id}.json',
-    auth=(os.getenv('BROWSERSTACK_LOGIN'), os.getenv('BROWSERSTACK_PASS')),
+    auth=(os.getenv('USER_NAME'), os.getenv('ACCESS_KEY')),
     ).json()
     print(bstack_session)
     video_url = bstack_session['automation_session']['video_url']
@@ -84,6 +86,10 @@ def mobile_management(request):
     browser.config.driver_remote_url = os.getenv("BASE_URL")
     browser.config.driver_options = options
     browser.config.timeout = float(os.getenv('timeout', '10.0'))
+
+    browser.config._wait_decorator = support._logging.wait_with(
+        context=allure_commons._allure.StepContext
+    )
 
     yield
 
