@@ -2,7 +2,6 @@ import allure
 import pytest
 import allure_commons
 from appium.options.android import UiAutomator2Options
-from appium.options.ios import XCUITestOptions
 from dotenv import load_dotenv
 from selene import browser, support
 import os
@@ -36,13 +35,6 @@ def attach_bstack_video(session_id):
 
 @pytest.fixture(scope='function', autouse=True)
 def mobile_management(request):
-    if hasattr(browser, 'driver') and browser.driver:
-        try:
-            browser.driver.quit()
-        except:
-            pass
-        browser.config.driver = None
-
     options = UiAutomator2Options().load_capabilities({
             'platformName': 'Android',
             'platformVersion': '12.0',
