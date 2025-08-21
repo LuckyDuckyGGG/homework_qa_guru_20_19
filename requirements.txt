@@ -1,3 +1,4 @@
 pytest
-selenium==4.5.0
-selene>=2.0.0rc2
+allure-pytest
+selene>=2.0.0rc9
+appium-python-client
