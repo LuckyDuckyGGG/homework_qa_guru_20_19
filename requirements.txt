@@ -4,3 +4,4 @@ selene>=2.0.0rc9
 appium-python-client
 python-dotenv
 dotenv
+requests
