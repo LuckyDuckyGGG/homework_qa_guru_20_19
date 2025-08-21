@@ -15,39 +15,6 @@ def load_env():
     load_dotenv()
 
 
-def get_capabilities(platform):
-    if platform == 'android':
-        return {
-            'platformName': 'Android',
-            'platformVersion': '12.0',
-            'deviceName': 'Samsung Galaxy S22 Ultra',
-            'app': 'bs://c4135d768e0c45d3cd9368d1f1cf1c0c5545caa5',
-            'bstack:options': {
-                'projectName': 'Android Project',
-                'buildName': 'android-build-1',
-                'sessionName': 'Android Test',
-                'userName': os.getenv("USER_NAME"),
-                'accessKey': os.getenv("ACCESS_KEY")
-            }
-        }
-    elif platform == 'ios':
-        return {
-            'platformName': 'iOS',
-            'platformVersion': '16.4',
-            'deviceName': 'iPhone 14',
-            'app': 'bs://sample.app',
-            'bstack:options': {
-                'projectName': 'iOS Project',
-                'buildName': 'ios-build-1',
-                'sessionName': 'iOS Test',
-                'userName': os.getenv("USER_NAME"),
-                'accessKey': os.getenv("ACCESS_KEY")
-            }
-        }
-    else:
-        raise ValueError(f"Unsupported platform: {platform}")
-
-
 def attach_bstack_video(session_id):
     bstack_session = requests.get(
     f'https://api.browserstack.com/app-automate/sessions/{session_id}.json',
@@ -69,19 +36,27 @@ def attach_bstack_video(session_id):
 
 @pytest.fixture(scope='function', autouse=True)
 def mobile_management(request):
-    platform = 'android'
+    if hasattr(browser, 'driver') and browser.driver:
+        try:
+            browser.driver.quit()
+        except:
+            pass
+        browser.config.driver = None
 
-    if request.node.get_closest_marker('ios'):
-        platform = 'ios'
-    elif request.node.get_closest_marker('android'):
-        platform = 'android'
-
-    caps = get_capabilities(platform)
-
-    if platform == 'android':
-        options = UiAutomator2Options().load_capabilities(caps)
-    else:
-        options = XCUITestOptions().load_capabilities(caps)
+    options = UiAutomator2Options().load_capabilities({
+            'platformName': 'Android',
+            'platformVersion': '12.0',
+            'deviceName': 'Samsung Galaxy S22 Ultra',
+            'app': 'bs://c4135d768e0c45d3cd9368d1f1cf1c0c5545caa5',
+            'appium:fullReset': True,
+            'bstack:options': {
+                'projectName': 'Android Project',
+                'buildName': 'android-build-1',
+                'sessionName': 'Android Test',
+                'userName': os.getenv("USER_NAME"),
+                'accessKey': os.getenv("ACCESS_KEY")
+            }
+        })
 
     browser.config.driver_remote_url = os.getenv("BASE_URL")
     browser.config.driver_options = options
@@ -107,11 +82,7 @@ def mobile_management(request):
 
     session_id = browser.driver.session_id
 
-    browser.quit()
+    browser.driver.quit()
+    browser.config.driver = None
 
     attach_bstack_video(session_id)
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers", "android: mark test as android only")
-    config.addinivalue_line("markers", "ios: mark test as ios only")
